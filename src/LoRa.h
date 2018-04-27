@@ -128,6 +128,4 @@ private:
   void (*_onReceive)(int);
 };
 
-extern LoRaClass LoRa;
-
 #endif

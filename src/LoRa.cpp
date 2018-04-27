@@ -596,7 +596,5 @@ uint8_t LoRaClass::singleTransfer(uint8_t address, uint8_t value)
 
 void LoRaClass::onDio0RiseRx()
 {
-  LoRa.handleDio0RiseRx();
+  Serial.println(F("Not implemented!"));
 }
-
-LoRaClass LoRa;
