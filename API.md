@@ -38,6 +38,17 @@ To save further pins one could connect the reset pin of the MCU with reset pin o
 
 * `reset` - set to `-1` to omit this pin
 
+### Set SPI interface
+
+Override the default SPI interface used by the library. **Must** be called before `LoRa.begin()`.
+
+```arduino
+LoRa.setSPI(spi);
+```
+ * `spi` - new SPI interface to use, defaults to `SPI`
+
+This call is optional and only needs to be used if you need to change the default SPI interface used, in the case your Arduino (or compatible) board has more than one SPI interface present.
+
 ### Set SPI Frequency
 
 Override the default SPI frequency of 10 MHz used by the library. **Must** be called before `LoRa.begin()`.
@@ -122,6 +133,8 @@ Returns the packet size in bytes or `0` if no packet was received.
 
 ### Continuous receive mode
 
+**WARNING**: Not supported on the Arduino MKR WAN 1300 board!
+
 #### Register callback
 
 Register a callback function for when a packet is received.
@@ -165,6 +178,14 @@ float snr = LoRa.packetSnr();
 ```
 
 Returns the estimated SNR of the received packet in dB.
+
+### Packet Frequency Error
+
+```arduino
+long freqErr = LoRa.packetFrequencyError();
+```
+
+Returns the frequency error of the received packet in Hz. The frequency error is the frequency offset between the receiver centre frequency and that of an incoming LoRa signal.
 
 ### Available
 
@@ -228,7 +249,7 @@ LoRa.setTxPower(txPower, outputPin);
  * `txPower` - TX power in dBm, defaults to `17`
  * `outputPin` - (optional) Power Amplifier output pin, supported values are `PA_OUTPUT_RFO_PIN` and `PA_OUTPUT_PA_BOOST_PIN`, defaults to `PA_OUTPUT_PA_BOOST_PIN`.
 
-Supported values are between `2` and `17` for `PA_OUTPUT_PA_BOOST_PIN`, `-1` and `14` for `PA_OUTPUT_RFO_PIN`.
+Supported values are `2` to `20` for `PA_OUTPUT_PA_BOOST_PIN`, and `0` to `14` for `PA_OUTPUT_RFO_PIN`.
 
 Most modules have the PA output pin connected to PA BOOST,
 
@@ -296,7 +317,7 @@ Change the sync word of the radio.
 LoRa.setSyncWord(syncWord);
 ```
 
- * `syncWord` - byte value to use as the sync word, defaults to `0x34`
+ * `syncWord` - byte value to use as the sync word, defaults to `0x12`
 
 ### CRC
 
