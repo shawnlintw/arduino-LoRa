@@ -7,12 +7,22 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-#define LORA_DEFAULT_SS_PIN    10
-#define LORA_DEFAULT_RESET_PIN 9
-#define LORA_DEFAULT_DIO0_PIN  2
+#ifdef ARDUINO_SAMD_MKRWAN1300
+#define LORA_DEFAULT_SPI           SPI1
+#define LORA_DEFAULT_SPI_FREQUENCY 250000
+#define LORA_DEFAULT_SS_PIN        LORA_IRQ_DUMB
+#define LORA_DEFAULT_RESET_PIN     -1
+#define LORA_DEFAULT_DIO0_PIN      -1
+#else
+#define LORA_DEFAULT_SPI           SPI
+#define LORA_DEFAULT_SPI_FREQUENCY 8E6 
+#define LORA_DEFAULT_SS_PIN        10
+#define LORA_DEFAULT_RESET_PIN     9
+#define LORA_DEFAULT_DIO0_PIN      2
+#endif
 
-#define PA_OUTPUT_RFO_PIN      0
-#define PA_OUTPUT_PA_BOOST_PIN 1
+#define PA_OUTPUT_RFO_PIN          0
+#define PA_OUTPUT_PA_BOOST_PIN     1
 
 // Interrupt related
 #define LORA_IRQ_DIO0_RXDONE      0x0
@@ -57,6 +67,7 @@ public:
   int parsePacket(int size = 0);
   int packetRssi();
   float packetSnr();
+  long packetFrequencyError();
 
   // from Print
   virtual size_t write(uint8_t byte);
@@ -68,9 +79,11 @@ public:
   virtual int peek();
   virtual void flush();
 
+#ifndef ARDUINO_SAMD_MKRWAN1300
   void onReceive(void(*callback)(int));
 
   void receive(int size = 0);
+#endif
   void idle();
   void sleep();
   void cad(); // Channel activity detection
@@ -85,6 +98,7 @@ public:
   void enableLowDataRateOptimize(bool enabled);
   void enableCrc();
   void disableCrc();
+  void setOCP(uint8_t mA); // Over Current Protection control
 
   void setInterruptMode(byte pin, byte mode); // pin: [DIO]0..5; mode: see LORA_IRQ_DIO*
   uint8_t readInterrupts(); // See LORA_IRQ_FLAG_* for testing against a specific one
@@ -100,6 +114,7 @@ public:
   byte random();
 
   void setPins(int ss = LORA_DEFAULT_SS_PIN, int reset = LORA_DEFAULT_RESET_PIN, int dio0 = LORA_DEFAULT_DIO0_PIN);
+  void setSPI(SPIClass& spi);
   void setSPIFrequency(uint32_t frequency);
 
   void dumpRegisters(Stream& out);
@@ -110,6 +125,11 @@ private:
 
   void handleDio0RiseRx();
 
+  int getSpreadingFactor();
+  long getSignalBandwidth();
+
+  void setLdoFlag();
+
   uint8_t readRegister(uint8_t address);
   void writeRegister(uint8_t address, uint8_t value);
   uint8_t singleTransfer(uint8_t address, uint8_t value);
@@ -118,6 +138,7 @@ private:
 
 private:
   SPISettings _spiSettings;
+  SPIClass* _spi;
   int _ss;
   int _reset;
   int _dio0;
