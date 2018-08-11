@@ -102,8 +102,6 @@ public:
 
   void setInterruptMode(byte pin, byte mode); // pin: [DIO]0..5; mode: see LORA_IRQ_DIO*
   uint8_t readInterrupts(); // See LORA_IRQ_FLAG_* for testing against a specific one
-  
-  float compensateFrequencyOffset();
 
   void clearInterrupts(uint8_t irqFlags);
 

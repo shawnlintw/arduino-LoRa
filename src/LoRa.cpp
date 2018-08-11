@@ -566,6 +566,31 @@ void LoRaClass::setOCP(uint8_t mA)
   writeRegister(REG_OCP, 0x20 | (0x1F & ocpTrim));
 }
 
+void LoRaClass::setInterruptMode(byte pin, byte mode)
+{
+  if (pin <= 3) {
+    uint8_t mapping = readRegister(REG_DIO_MAPPING_1);
+    bitWrite(mapping, 6 - (pin * 2), bitRead(mode, 0));
+    bitWrite(mapping, 6 - (pin * 2) + 1, bitRead(mode, 1));
+    writeRegister(REG_DIO_MAPPING_1, mapping);
+  } else if (pin <= 5){
+    uint8_t mapping = readRegister(REG_DIO_MAPPING_2);
+    bitWrite(mapping, 14 - (pin * 2), bitRead(mode, 0));
+    bitWrite(mapping, 14 - (pin * 2) + 1, bitRead(mode, 1));
+    writeRegister(REG_DIO_MAPPING_2, mapping);
+  }
+}
+
+uint8_t LoRaClass::readInterrupts()
+{
+  return readRegister(REG_IRQ_FLAGS);
+}
+
+void LoRaClass::clearInterrupts(uint8_t irqFlags)
+{
+    writeRegister(REG_IRQ_FLAGS, irqFlags);
+}
+
 byte LoRaClass::random()
 {
   return readRegister(REG_RSSI_WIDEBAND);
