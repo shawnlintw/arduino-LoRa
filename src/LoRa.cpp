@@ -234,7 +234,7 @@ float LoRaClass::packetSnr()
   return ((int8_t)readRegister(REG_PKT_SNR_VALUE)) * 0.25;
 }
 
-long LoRaClass::packetFrequencyError()
+float LoRaClass::packetFrequencyError()
 {
   int32_t freqError = 0;
   freqError = static_cast<int32_t>(readRegister(REG_FREQ_ERROR_MSB) & B111);
@@ -250,7 +250,15 @@ long LoRaClass::packetFrequencyError()
   const float fXtal = 32E6; // FXOSC: crystal oscillator (XTAL) frequency (2.5. Chip Specification, p. 14)
   const float fError = ((static_cast<float>(freqError) * (1L << 24)) / fXtal) * (getSignalBandwidth() / 500000.0f); // p. 37
 
-  return static_cast<long>(fError);
+  return fError;
+}
+
+void LoRaClass::compensateFrequencyOffset(const float &fError)
+{
+  const int8_t ppmOffset = static_cast<int8_t>(0.95f * (fError * 10E6f / _frequency));
+
+  setFrequency(static_cast<long>(_frequency - fError));
+  writeRegister(REG_PPM_CORRECTION, reinterpret_cast<const uint8_t&>(ppmOffset));
 }
 
 size_t LoRaClass::write(uint8_t byte)
