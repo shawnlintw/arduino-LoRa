@@ -62,7 +62,7 @@ public:
   void end();
 
   int beginPacket(int implicitHeader = false);
-  int endPacket();
+  int endPacket(bool async = false);
 
   int parsePacket(int size = 0);
   int packetRssi();
@@ -99,6 +99,9 @@ public:
   void enableLowDataRateOptimize(bool enabled);
   void enableCrc();
   void disableCrc();
+  void enableInvertIQ();
+  void disableInvertIQ();
+  
   void setOCP(uint8_t mA); // Over Current Protection control
 
   void setInterruptMode(byte pin, byte mode); // pin: [DIO]0..5; mode: see LORA_IRQ_DIO*
@@ -123,6 +126,7 @@ private:
   void implicitHeaderMode();
 
   void handleDio0RiseRx();
+  bool isTransmitting();
 
   int getSpreadingFactor();
   long getSignalBandwidth();

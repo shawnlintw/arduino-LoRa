@@ -32,8 +32,10 @@
 #define REG_FREQ_ERROR_LSB       0x2a
 #define REG_RSSI_WIDEBAND        0x2c
 #define REG_DETECTION_OPTIMIZE   0x31
+#define REG_INVERTIQ             0x33
 #define REG_DETECTION_THRESHOLD  0x37
 #define REG_SYNC_WORD            0x39
+#define REG_INVERTIQ2            0x3b
 #define REG_DIO_MAPPING_1        0x40
 #define REG_DIO_MAPPING_2        0x41
 #define REG_VERSION              0x42
@@ -146,6 +148,10 @@ void LoRaClass::end()
 
 int LoRaClass::beginPacket(int implicitHeader)
 {
+  if (isTransmitting()) {
+    return 0;
+  }
+
   // put in standby mode
   idle();
 
@@ -162,20 +168,36 @@ int LoRaClass::beginPacket(int implicitHeader)
   return 1;
 }
 
-int LoRaClass::endPacket()
+int LoRaClass::endPacket(bool async)
 {
   // put in TX mode
   writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
 
-  // wait for TX done
-  while((readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) == 0) {
-    yield();
+  if (async) {
+    // grace time is required for the radio
+    delayMicroseconds(150);
+  } else {
+    // wait for TX done
+    while ((readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) == 0) {
+      yield();
+    }
+    clearInterrupts(LORA_IRQ_FLAG_TX_DONE);
   }
 
-  // clear IRQ's
-  clearInterrupts(LORA_IRQ_FLAG_TX_DONE);
-
   return 1;
+}
+
+bool LoRaClass::isTransmitting()
+{
+  if ((readRegister(REG_OP_MODE) & MODE_TX) == MODE_TX) {
+    return true;
+  }
+
+  if (readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) {
+    clearInterrupts(LORA_IRQ_FLAG_TX_DONE);
+  }
+
+  return false;
 }
 
 int LoRaClass::parsePacket(int size)
@@ -559,6 +581,18 @@ void LoRaClass::enableCrc()
 void LoRaClass::disableCrc()
 {
   writeRegister(REG_MODEM_CONFIG_2, readRegister(REG_MODEM_CONFIG_2) & 0xfb);
+}
+
+void LoRaClass::enableInvertIQ()
+{
+  writeRegister(REG_INVERTIQ,  0x66);
+  writeRegister(REG_INVERTIQ2, 0x19);
+}
+
+void LoRaClass::disableInvertIQ()
+{
+  writeRegister(REG_INVERTIQ,  0x27);
+  writeRegister(REG_INVERTIQ2, 0x1d);
 }
 
 void LoRaClass::setOCP(uint8_t mA)
