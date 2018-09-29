@@ -95,13 +95,14 @@ public:
   void setSignalBandwidth(long sbw);
   void setCodingRate4(int denominator);
   void setPreambleLength(long length);
+  void setSymbolTimeout(uint16_t symbols);
   void setSyncWord(uint8_t sw);
   void enableLowDataRateOptimize(bool enabled);
   void enableCrc();
   void disableCrc();
   void enableInvertIQ();
   void disableInvertIQ();
-  
+
   void setOCP(uint8_t mA); // Over Current Protection control
 
   void setInterruptMode(byte pin, byte mode); // pin: [DIO]0..5; mode: see LORA_IRQ_DIO*

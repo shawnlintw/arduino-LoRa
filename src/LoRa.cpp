@@ -22,6 +22,7 @@
 #define REG_PKT_RSSI_VALUE       0x1a
 #define REG_MODEM_CONFIG_1       0x1d
 #define REG_MODEM_CONFIG_2       0x1e
+#define REG_SYMB_TIMEOUT_LSB     0x1f
 #define REG_PREAMBLE_MSB         0x20
 #define REG_PREAMBLE_LSB         0x21
 #define REG_PAYLOAD_LENGTH       0x22
@@ -560,6 +561,19 @@ void LoRaClass::setPreambleLength(long length)
 {
   writeRegister(REG_PREAMBLE_MSB, (uint8_t)(length >> 8));
   writeRegister(REG_PREAMBLE_LSB, (uint8_t)(length >> 0));
+}
+
+void LoRaClass::setSymbolTimeout(uint16_t symbols)
+{
+  if (symbols > 1023) { // p. 40
+    symbols = 1023;
+  } else if (symbols < 4) {
+    symbols = 4;
+  }
+
+  const uint8_t currentMCValue = readRegister(REG_MODEM_CONFIG_2) & B11111100;
+  writeRegister(REG_MODEM_CONFIG_2, currentMCValue | ((uint8_t)(symbols >> 8)));
+  writeRegister(REG_SYMB_TIMEOUT_LSB, (uint8_t)(symbols >> 0));
 }
 
 void LoRaClass::setSyncWord(uint8_t sw)
