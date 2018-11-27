@@ -54,6 +54,17 @@
 #define LORA_IRQ_FLAG_FHSS_CHANGE_CH    B00000010
 #define LORA_IRQ_FLAG_CAD_DETECTED      B00000001
 
+// Device modes
+#define LORA_MODE_LONG_RANGE_MODE 0x80
+#define LORA_MODE_SLEEP           0x00
+#define LORA_MODE_STDBY           0x01
+#define LORA_MODE_FSTX            0x02
+#define LORA_MODE_TX              0x03
+#define LORA_MODE_FSRX            0x04
+#define LORA_MODE_RX_CONTINUOUS   0x05
+#define LORA_MODE_RX_SINGLE       0x06
+#define LORA_MODE_CAD             0x07
+
 class LoRaClass : public Stream {
 public:
   LoRaClass();
@@ -121,6 +132,18 @@ public:
   void setSPIFrequency(uint32_t frequency);
 
   void dumpRegisters(Stream& out);
+
+  enum class DeviceMode : uint8_t {
+    Sleep                    = LORA_MODE_SLEEP,
+    Standby                  = LORA_MODE_STDBY,
+    FrequencySynthesisTx     = LORA_MODE_FSTX,
+    FrequencySynthesisRx     = LORA_MODE_FSRX,
+    Transmit                 = LORA_MODE_TX,
+    ReceiveContinous         = LORA_MODE_RX_CONTINUOUS,
+    ReceiveSingle            = LORA_MODE_RX_SINGLE,
+    ChannelActivityDetection = LORA_MODE_CAD,
+  };
+  DeviceMode getDeviceMode();
 
 private:
   void explicitHeaderMode();

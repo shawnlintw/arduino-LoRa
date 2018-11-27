@@ -42,15 +42,6 @@
 #define REG_VERSION              0x42
 #define REG_PA_DAC               0x4d
 
-// modes
-#define MODE_LONG_RANGE_MODE     0x80
-#define MODE_SLEEP               0x00
-#define MODE_STDBY               0x01
-#define MODE_TX                  0x03
-#define MODE_RX_CONTINUOUS       0x05
-#define MODE_RX_SINGLE           0x06
-#define MODE_CAD                 0x07
-
 // PA config
 #define PA_BOOST                 0x80
 
@@ -172,7 +163,7 @@ int LoRaClass::beginPacket(int implicitHeader)
 int LoRaClass::endPacket(bool async)
 {
   // put in TX mode
-  writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_TX);
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_TX);
 
   if (async) {
     // grace time is required for the radio
@@ -190,14 +181,11 @@ int LoRaClass::endPacket(bool async)
 
 bool LoRaClass::isTransmitting()
 {
-  if ((readRegister(REG_OP_MODE) & MODE_TX) == MODE_TX) {
+  if (getDeviceMode() == DeviceMode::Transmit) {
     return true;
   }
 
-  if (readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) {
-    clearInterrupts(LORA_IRQ_FLAG_TX_DONE);
-  }
-
+  clearInterrupts(LORA_IRQ_FLAG_TX_DONE);
   return false;
 }
 
@@ -234,14 +222,12 @@ int LoRaClass::parsePacket(int size)
 
     // put in standby mode
     idle();
-  } else if (readRegister(REG_OP_MODE) != (MODE_LONG_RANGE_MODE | MODE_RX_SINGLE)) {
-    // not currently in RX mode
-
+  } else if (getDeviceMode() != DeviceMode::ReceiveSingle) {
     // reset FIFO address
     writeRegister(REG_FIFO_ADDR_PTR, 0);
 
     // put in single RX mode
-    writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
+    writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_SINGLE);
   }
 
   return packetLength;
@@ -378,24 +364,24 @@ void LoRaClass::receive(int size)
     explicitHeaderMode();
   }
 
-  writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_CONTINUOUS);
 }
 #endif
 
 void LoRaClass::idle()
 {
-  writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_STDBY);
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_STDBY);
 }
 
 void LoRaClass::sleep()
 {
-  writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_SLEEP);
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_SLEEP);
 }
 
 void LoRaClass::cad()
 {
     idle();
-    writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_CAD);
+    writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_CAD);
 }
 
 void LoRaClass::setTxPower(int level, int outputPin)
@@ -677,6 +663,12 @@ void LoRaClass::dumpRegisters(Stream& out)
     out.print(": 0x");
     out.println(readRegister(i), HEX);
   }
+}
+
+LoRaClass::DeviceMode LoRaClass::getDeviceMode()
+{
+  const uint8_t mode = readRegister(REG_OP_MODE) & B111;
+  return static_cast<DeviceMode>(mode);
 }
 
 void LoRaClass::explicitHeaderMode()
