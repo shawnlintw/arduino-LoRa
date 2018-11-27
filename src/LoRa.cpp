@@ -162,8 +162,7 @@ int LoRaClass::beginPacket(int implicitHeader)
 
 int LoRaClass::endPacket(bool async)
 {
-  // put in TX mode
-  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_TX);
+  tx();
 
   if (async) {
     // grace time is required for the radio
@@ -226,8 +225,7 @@ int LoRaClass::parsePacket(int size)
     // reset FIFO address
     writeRegister(REG_FIFO_ADDR_PTR, 0);
 
-    // put in single RX mode
-    writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_SINGLE);
+    rxSingle();
   }
 
   return packetLength;
@@ -345,12 +343,12 @@ void LoRaClass::onReceive(void(*callback)(int))
     attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0RiseRx, RISING);
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
-#endif
+#endif // SPI_HAS_NOTUSINGINTERRUPT
   } else {
     detachInterrupt(digitalPinToInterrupt(_dio0));
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.notUsingInterrupt(digitalPinToInterrupt(_dio0));
-#endif
+#endif // SPI_HAS_NOTUSINGINTERRUPT
   }
 }
 
@@ -364,24 +362,45 @@ void LoRaClass::receive(int size)
     explicitHeaderMode();
   }
 
-  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_CONTINUOUS);
+  rxContinuous();
 }
-#endif
+#endif // !ARDUINO_SAMD_MKRWAN1300
 
 void LoRaClass::idle()
 {
   writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_STDBY);
+  delayMicroseconds(210); // SLEEP -> IDLE takes about ~210 µs (RXCONT -> IDLE: ~80 µs)
 }
 
 void LoRaClass::sleep()
 {
   writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_SLEEP);
+  delayMicroseconds(90); // RXCONTINUOUS -> SLEEP takes about ~70-90 µs
 }
 
 void LoRaClass::cad()
 {
-    idle();
-    writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_CAD);
+  idle();
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_CAD);
+  delayMicroseconds(120); // IDLE -> CAD takes about ~120 µs
+}
+
+void LoRaClass::tx()
+{
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_TX);
+  delayMicroseconds(220); // IDLE -> TX takes about ~220 µs
+}
+
+void LoRaClass::rxSingle()
+{
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_SINGLE);
+  delayMicroseconds(120); // IDLE -> RXSINGLE takes about ~120 µs
+}
+
+void LoRaClass::rxContinuous()
+{
+  writeRegister(REG_OP_MODE, LORA_MODE_LONG_RANGE_MODE | LORA_MODE_RX_CONTINUOUS);
+  delayMicroseconds(115); // IDLE -> RXCONTINUOUS takes about ~115 µs
 }
 
 void LoRaClass::setTxPower(int level, int outputPin)

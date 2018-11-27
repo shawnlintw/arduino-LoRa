@@ -99,6 +99,9 @@ public:
   void idle();
   void sleep();
   void cad(); // Channel activity detection
+  void tx();
+  void rxSingle();
+  void rxContinuous();
 
   void setTxPower(int level, int outputPin = PA_OUTPUT_PA_BOOST_PIN);
   void setFrequency(long frequency);
