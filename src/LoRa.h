@@ -110,7 +110,7 @@ public:
   void setSpreadingFactor(int sf);
   void setSignalBandwidth(long sbw);
   void setCodingRate4(int denominator);
-  void setPreambleLength(long length);
+  void setPreambleLength(uint16_t length);
   void setSymbolTimeout(uint16_t symbols);
   void setSyncWord(uint8_t sw);
   void setMaxPayloadLength(const uint8_t payloadLength);
