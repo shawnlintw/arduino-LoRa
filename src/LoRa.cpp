@@ -26,6 +26,7 @@
 #define REG_PREAMBLE_MSB         0x20
 #define REG_PREAMBLE_LSB         0x21
 #define REG_PAYLOAD_LENGTH       0x22
+#define REG_MAX_PAYLOAD_LENGTH   0x23
 #define REG_MODEM_CONFIG_3       0x26
 #define REG_PPM_CORRECTION       0x27
 #define REG_FREQ_ERROR_MSB       0x28
@@ -584,6 +585,11 @@ void LoRaClass::setSymbolTimeout(uint16_t symbols)
 void LoRaClass::setSyncWord(uint8_t sw)
 {
   writeRegister(REG_SYNC_WORD, sw);
+}
+
+void LoRaClass::setMaxPayloadLength(const uint8_t payloadLength)
+{
+  writeRegister(REG_MAX_PAYLOAD_LENGTH, payloadLength);
 }
 
 void LoRaClass::enableLowDataRateOptimize(bool enabled)

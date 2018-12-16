@@ -111,6 +111,7 @@ public:
   void setPreambleLength(long length);
   void setSymbolTimeout(uint16_t symbols);
   void setSyncWord(uint8_t sw);
+  void setMaxPayloadLength(const uint8_t payloadLength);
   void enableLowDataRateOptimize(bool enabled);
   void enableCrc();
   void disableCrc();
