@@ -191,7 +191,7 @@ bool LoRaClass::isTransmitting()
 
 int LoRaClass::parsePacket(int size)
 {
-  int packetLength = 0;
+  int payloadLength = 0;
   const uint8_t irqFlags = readInterrupts();
 
   if (size > 0) {
@@ -210,12 +210,8 @@ int LoRaClass::parsePacket(int size)
     // received a packet
     _packetIndex = 0;
 
-    // read packet length
-    if (_implicitHeaderMode) {
-      packetLength = readRegister(REG_PAYLOAD_LENGTH);
-    } else {
-      packetLength = readRegister(REG_RX_NB_BYTES);
-    }
+    // read payload length
+    payloadLength = getPayloadLength();
 
     // set FIFO address to current RX address
     writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
@@ -229,7 +225,7 @@ int LoRaClass::parsePacket(int size)
     rxSingle();
   }
 
-  return packetLength;
+  return payloadLength;
 }
 
 int LoRaClass::packetRssi()
@@ -364,6 +360,11 @@ void LoRaClass::receive(int size)
   }
 
   rxContinuous();
+}
+
+uint8_t LoRaClass::getPayloadLength()
+{
+  return _implicitHeaderMode ? readRegister(REG_PAYLOAD_LENGTH) : readRegister(REG_RX_NB_BYTES);
 }
 #endif // !ARDUINO_SAMD_MKRWAN1300
 
@@ -723,7 +724,7 @@ void LoRaClass::handleDio0RiseRx()
     _packetIndex = 0;
 
     // read packet length
-    int packetLength = _implicitHeaderMode ? readRegister(REG_PAYLOAD_LENGTH) : readRegister(REG_RX_NB_BYTES);
+    int packetLength = getPayloadLength();
 
     // set FIFO address to current RX address
     writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));

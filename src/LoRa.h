@@ -96,6 +96,8 @@ public:
 
   void receive(int size = 0);
 #endif
+  uint8_t getPayloadLength();
+
   void idle();
   void sleep();
   void cad(); // Channel activity detection
