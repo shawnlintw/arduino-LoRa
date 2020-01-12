@@ -121,6 +121,7 @@ public:
   void setSyncWord(uint8_t sw);
   void setMaxPayloadLength(const uint8_t payloadLength);
   void enableLowDataRateOptimize(bool enabled);
+  void enableTcxo(const bool enabled);
   void enableCrc();
   void disableCrc();
   void enableInvertIQ();

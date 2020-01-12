@@ -41,6 +41,7 @@
 #define REG_DIO_MAPPING_1        0x40
 #define REG_DIO_MAPPING_2        0x41
 #define REG_VERSION              0x42
+#define REG_TCXO                 0x4b
 #define REG_PA_DAC               0x4d
 
 // PA config
@@ -607,6 +608,12 @@ void LoRaClass::enableLowDataRateOptimize(bool enabled)
 {
   uint8_t regValue = readRegister(REG_MODEM_CONFIG_3);
   writeRegister(REG_MODEM_CONFIG_3, bitWrite(regValue, 3, enabled));
+}
+
+void LoRaClass::enableTcxo(const bool enabled)
+{
+    uint8_t regValue = readRegister(REG_TCXO);
+    writeRegister(REG_TCXO, bitWrite(regValue, 4, enabled));
 }
 
 void LoRaClass::enableCrc()
