@@ -63,7 +63,8 @@ LoRaClass::LoRaClass() :
   _bandWidth(125E3),
   _packetIndex(0),
   _implicitHeaderMode(0),
-  _onReceive(NULL)
+  _onReceive(NULL),
+  _onTxDone(NULL)
 {
   // overide Stream timeout value
   setTimeout(0);
@@ -172,10 +173,7 @@ int LoRaClass::endPacket(bool async)
 {
   tx();
 
-  if (async) {
-    // grace time is required for the radio
-    delayMicroseconds(150);
-  } else {
+  if (!async) {
     // wait for TX done
     while ((readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) == 0) {
       yield();
@@ -343,8 +341,25 @@ void LoRaClass::onReceive(void(*callback)(int))
   if (callback) {
     pinMode(_dio0, INPUT);
     setInterruptMode(0, LORA_IRQ_DIO0_RXDONE);
-
+#ifdef SPI_HAS_NOTUSINGINTERRUPT
+    SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
+#endif
     attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0RiseRx, RISING);
+  } else {
+    detachInterrupt(digitalPinToInterrupt(_dio0));
+#ifdef SPI_HAS_NOTUSINGINTERRUPT
+    SPI.notUsingInterrupt(digitalPinToInterrupt(_dio0));
+#endif
+  }
+}
+
+void LoRaClass::onTxDone(void(*callback)())
+{
+  _onTxDone = callback;
+
+  if (callback) {
+    pinMode(_dio0, INPUT);
+    setInterruptMode(0, LORA_IRQ_DIO0_TXDONE);
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
 #endif // SPI_HAS_NOTUSINGINTERRUPT
@@ -358,6 +373,9 @@ void LoRaClass::onReceive(void(*callback)(int))
 
 void LoRaClass::receive(int size)
 {
+
+  writeRegister(REG_DIO_MAPPING_1, 0x00); // DIO0 => RXDONE
+
   if (size > 0) {
     implicitHeaderMode();
 
@@ -737,17 +755,25 @@ void LoRaClass::handleDio0RiseRx()
   }
 
   if ((irqFlags & LORA_IRQ_FLAG_PAYLOAD_CRC_ERROR) == 0) {
-    // received a packet
-    _packetIndex = 0;
 
-    // read packet length
+    if ((irqFlags & LORA_IRQ_FLAG_RX_DONE) != 0) {
+      // received a packet
+      _packetIndex = 0;
+
+      // read packet length
     int packetLength = getPayloadLength();
 
-    // set FIFO address to current RX address
-    writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
+      // set FIFO address to current RX address
+      writeRegister(REG_FIFO_ADDR_PTR, readRegister(REG_FIFO_RX_CURRENT_ADDR));
 
-    if (_onReceive) {
-      _onReceive(packetLength);
+      if (_onReceive) {
+        _onReceive(packetLength);
+      }
+    }
+    else if ((irqFlags & LORA_IRQ_FLAG_TX_DONE) != 0) {
+      if (_onTxDone) {
+        _onTxDone();
+      }
     }
   }
 }
