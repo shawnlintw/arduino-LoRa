@@ -169,13 +169,20 @@ int LoRaClass::beginPacket(int implicitHeader)
   return 1;
 }
 
-int LoRaClass::endPacket(bool async)
+int LoRaClass::endPacket(bool async, const unsigned long &timeoutMs)
 {
+  // BW: 7800 kHz, SF: 12, Preamble: 12 => Whole packet time: 16 935.4 ms
+
   tx();
 
   if (!async) {
     // wait for TX done
+    const unsigned long startMs = millis();
     while ((readRegister(REG_IRQ_FLAGS) & LORA_IRQ_FLAG_TX_DONE) == 0) {
+      if ((millis() - startMs) >= timeoutMs) {
+        return 0;
+      }
+
       yield();
     }
     clearInterrupts(LORA_IRQ_FLAG_TX_DONE);

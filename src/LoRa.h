@@ -79,7 +79,7 @@ public:
   void end();
 
   int beginPacket(int implicitHeader = false);
-  int endPacket(bool async = false);
+  int endPacket(bool async = false, const unsigned long &timeoutMs = 20000UL);
 
   int parsePacket(int size = 0);
   int packetRssi();
