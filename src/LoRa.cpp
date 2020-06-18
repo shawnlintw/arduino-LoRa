@@ -344,7 +344,7 @@ void LoRaClass::onReceive(void(*callback)(int))
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
     SPI.usingInterrupt(digitalPinToInterrupt(_dio0));
 #endif
-    attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0RiseRx, RISING);
+    attachInterrupt(digitalPinToInterrupt(_dio0), LoRaClass::onDio0Rise, RISING);
   } else {
     detachInterrupt(digitalPinToInterrupt(_dio0));
 #ifdef SPI_HAS_NOTUSINGINTERRUPT
@@ -804,7 +804,7 @@ uint8_t LoRaClass::singleTransfer(uint8_t address, uint8_t value)
   return response;
 }
 
-ISR_PREFIX void LoRaClass::onDio0RiseRx()
+ISR_PREFIX void LoRaClass::onDio0Rise()
 {
   Serial.println(F("Not implemented!"));
 }

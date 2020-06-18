@@ -175,7 +175,7 @@ private:
   void writeRegister(uint8_t address, uint8_t value);
   uint8_t singleTransfer(uint8_t address, uint8_t value);
 
-  static void onDio0RiseRx();
+  static void onDio0Rise();
 
 private:
   SPISettings _spiSettings;
