@@ -1,6 +1,7 @@
 # Arduino LoRa
 
-**This is a fork from [sandeepmistry's](https://github.com/sandeepmistry/arduino-LoRa) repository with my own changes. I try to keep this repository in pair with that one and sync back the code changes from there.**
+** This is a fork from szotsaki/arduino-LoRa repository.
+***This is a fork from [sandeepmistry's](https://github.com/sandeepmistry/arduino-LoRa) repository with my own changes. I try to keep this repository in pair with that one and sync back the code changes from there.**
 
 An [Arduino](https://arduino.cc/) library for sending and receiving data using [LoRa](https://www.lora-alliance.org/) radios.
 
